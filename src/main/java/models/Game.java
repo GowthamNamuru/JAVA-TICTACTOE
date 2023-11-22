@@ -1,6 +1,8 @@
 package main.java.models;
 
 import main.java.exceptions.InvalidGameException;
+import main.java.strategies.gameWinningStrategy.GameWinningStrategy;
+import main.java.strategies.gameWinningStrategy.OrderOneGameWinningStrategy;
 
 import java.security.PublicKey;
 import java.util.ArrayList;
@@ -14,6 +16,17 @@ public class Game {
     private GameStatus gameStatus;
 
     private int nextPlayerIndex;
+
+    private GameWinningStrategy gameWinningStrategy;
+    private Player winner;
+
+    public GameWinningStrategy getGameWinningStrategy() {
+        return gameWinningStrategy;
+    }
+
+    public void setGameWinningStrategy(GameWinningStrategy gameWinningStrategy) {
+        this.gameWinningStrategy = gameWinningStrategy;
+    }
 
     public Board getBoard() {
         return board;
@@ -78,12 +91,14 @@ public class Game {
         // Validate this move
         // Check if the cell is the empty cell
         if (cell.getCellState().equals(CellState.EMPTY)) {
-
-            // cell.setCellState(CellState.FILLED);
             board.getBoard().get(row).get(column).setCellState(CellState.FILLED);
-            // cell.setPlayer(playerToMove);
             board.getBoard().get(row).get(column).setPlayer(playerToMove);
             moves.add(move);
+        }
+
+        if (gameWinningStrategy.checkWinner(board, playerToMove, board.getBoard().get(row).get(column))) {
+            gameStatus = GameStatus.ENDED;
+            winner = playerToMove;
         }
         nextPlayerIndex += 1;
         nextPlayerIndex %= players.size();
@@ -92,7 +107,7 @@ public class Game {
     }
 
     public Player getWinner() {
-        return null;
+        return winner;
     }
 
     public static class GameBuilder {
@@ -134,6 +149,7 @@ public class Game {
             game.setMoves(new ArrayList<>());
             game.setBoard(new Board(dimension));
             game.setNextPlayerIndex(0);
+            game.setGameWinningStrategy(new OrderOneGameWinningStrategy(dimension));
             return game;
         }
     }
